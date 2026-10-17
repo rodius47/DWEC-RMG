@@ -5,16 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego sencillo para el examen de la unidad 3</title>
 </head>
-<body>
+<body style="background-color: bisque;">
     <!-- Creación del perfil del jugador -->
-    <form >
+    
         <label for="nombre">Nombre de Usuario:</label>
+        <br>
         <input type="text" id="nombre" name="nombre">
         <br>
         <label for="fechaNacimiento">Fecha de nacimiento:</label>
+        <br>
         <input type="date" id="fechaNacimiento" name="fechaNacimiento">
         <br>
-        <button type="submit">Crear Perfil</button>
-    </form>
+        <button id="Boton">Crear Perfil</button>
+
+    <p class="mensaje"></p>
+    
+    <script>
+        
+        // const hoy = new Date().toISOString().split("T")[0];
+        // document.getElementById("fechaNacimiento").max = hoy;
+
+        //Todas las constantes que se usan en la pantalla de inicio de sesion
+        const nombre = document.getElementById("nombre").value.trim();
+        const fecha = document.getElementById("fechaNacimiento").value;
+        const mensaje = document.getElementByClass("mensaje");
+        const boton = document.getElementById("Boton");
+        const edadMinima = 18;
+
+        // Error de datos no introducidos
+        if(!fecha || !nombre){
+            mensaje.textContext = "Debes proporcionar tanto Nombre como fecha de nacimiento";
+            alert("Error dos campos");
+        }
+
+        // if(fecha > hoy ){
+        //     alert(hoy + " Error de fecha: " + fecha)
+        // }else if(fecha <= hoy){
+        //     alert(hoy + " Fecha correcta: " + fecha)
+        // }else if(fecha != hoy){
+        //     alert(hoy + " Fecha incorrecta: " + fecha)
+        // }
+        // else{
+        //     alert(hoy + " Fecha vacía: " + fecha)
+        // }
+        // alert("Fecha de nacimiento: " + fecha);// No muestra la fecha, sale como undefined
+    </script>
 </body>
 </html>
