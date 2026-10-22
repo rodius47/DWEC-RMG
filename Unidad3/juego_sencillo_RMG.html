@@ -4,8 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego sencillo para el examen de la unidad 3</title>
+    <style>
+        body{
+            background-color: bisque;
+            font-family: arial, sans-serif;
+        }
+    </style>
 </head>
-<body style="background-color: bisque;">
+<body>
     <!-- Creación del perfil del jugador -->
     <div>
         <label for="nombre">Nombre de Usuario:</label>
@@ -34,19 +40,47 @@
             const fecha = document.getElementById("fechaNacimiento").value;
             const mensaje = document.getElementById("mensaje");
             const edadMinima = 18;
+            
+            //Calculo real de edad
+           
+            const fechaDate = new Date(fecha);
+            const fechaActual = new Date();
+            fechaActual.setHours(0, 0, 0, 0);
 
-            if(!fecha || !nombre){
-                mensajeError("Se necesitan los dos campos, Usuario y Fecha de Nacimiento >= 18 años");
+            let edad = fechaActual.getFullYear() - fechaDate.getFullYear();
+            alert("La edad es: " + edad);
+            const mes = fechaActual.getMonth() - fechaDate.getMonth();
+
+            if(mes < 0 || (mes === 0 && fechaActual.getDate() < fechaNacimiento.getDate())) {
+                edad--; // Ajuste de edad por mes
+                alert("edad: " + edad);
+            }
+            
+
+            if(!fecha && !nombre){
+                mensajeFinal("Se necesitan los dos campos, Usuario y Fecha de Nacimiento >= 18 años");
                 return;
-                // alert("Error dos campos");
+            }else if(!fecha || fechaDate >= fechaActual){
+                mensajeFinal("Necesita indicar una fecha de nacimiento menor a hoy");
+                return;
+            }else if(edad < edadMinima){
+                mensajeFinal("Debes ser mayor de edad");
+                return;
+            }else if(!nombre){
+                mensajeFinal("Necerita introducir un nombre de Usuario");
+                return;
+            }else{
+                mensajeFinal("Perfil creado, pulse iniciar para jugar");
             }
         }
 
         // Funcion de mensaje de error
-        function mensajeError(msg){
+        function mensajeFinal(msg){
             const mensaje = document.getElementById("mensaje");
             mensaje.textContent = msg;
         }
+
+
     </script>
 </body>
 </html>
