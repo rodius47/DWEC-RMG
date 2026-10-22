@@ -41,6 +41,7 @@
             const mensaje = document.getElementById("mensaje");
             const edadMinima = 18;
             
+            
             //Calculo real de edad
            
             const fechaDate = new Date(fecha);
@@ -48,12 +49,12 @@
             fechaActual.setHours(0, 0, 0, 0);
 
             let edad = fechaActual.getFullYear() - fechaDate.getFullYear();
-            alert("La edad es: " + edad);
+            // alert("La edad es: " + typeof(edad));
             const mes = fechaActual.getMonth() - fechaDate.getMonth();
 
             if(mes < 0 || (mes === 0 && fechaActual.getDate() < fechaNacimiento.getDate())) {
                 edad--; // Ajuste de edad por mes
-                alert("edad: " + edad);
+                // alert("edad: " + edad);
             }
             
 
@@ -71,6 +72,9 @@
                 return;
             }else{
                 mensajeFinal("Perfil creado, pulse iniciar para jugar");
+                let numero = fechaDate.getFullYear();
+                let nombreUsuario = nombre.replaceAll(" ", "") + "_" + fechaDate.getFullYear();
+                alert("Tu nombre de usuario sera: " + nombreUsuario);
             }
         }
 
