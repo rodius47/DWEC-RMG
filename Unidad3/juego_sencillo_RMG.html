@@ -7,48 +7,46 @@
 </head>
 <body style="background-color: bisque;">
     <!-- Creación del perfil del jugador -->
-    
+    <div>
         <label for="nombre">Nombre de Usuario:</label>
-        <br>
         <input type="text" id="nombre" name="nombre">
-        <br>
-        <label for="fechaNacimiento">Fecha de nacimiento:</label>
-        <br>
-        <input type="date" id="fechaNacimiento" name="fechaNacimiento">
-        <br>
-        <button id="Boton">Crear Perfil</button>
+    </div>
 
-    <p class="mensaje"></p>
+    <br>
+
+    <div>
+        <label for="fechaNacimiento">Fecha de nacimiento:</label>
+        <input type="date" id="fechaNacimiento" name="fechaNacimiento">
+        <!-- date se encarga directamente de que la fecha sea menor o igual a hoy -->
+    </div>
+    <br>
+    <button onclick="validarPerfil()">Crear Perfil</button>
+
+    <p id="mensaje" class="mensaje"></p>
     
     <script>
-        
-        // const hoy = new Date().toISOString().split("T")[0];
-        // document.getElementById("fechaNacimiento").max = hoy;
 
-        //Todas las constantes que se usan en la pantalla de inicio de sesion
-        const nombre = document.getElementById("nombre").value.trim();
-        const fecha = document.getElementById("fechaNacimiento").value;
-        const mensaje = document.getElementByClass("mensaje");
-        const boton = document.getElementById("Boton");
-        const edadMinima = 18;
+        // Creacion de funcion validar perfil
+        function validarPerfil(){
 
-        // Error de datos no introducidos
-        if(!fecha || !nombre){
-            mensaje.textContext = "Debes proporcionar tanto Nombre como fecha de nacimiento";
-            alert("Error dos campos");
+             //Todas las constantes que se usan en la pantalla de inicio de sesion
+            const nombre = document.getElementById("nombre").value.trim();
+            const fecha = document.getElementById("fechaNacimiento").value;
+            const mensaje = document.getElementById("mensaje");
+            const edadMinima = 18;
+
+            if(!fecha || !nombre){
+                mensajeError("Se necesitan los dos campos, Usuario y Fecha de Nacimiento >= 18 años");
+                return;
+                // alert("Error dos campos");
+            }
         }
 
-        // if(fecha > hoy ){
-        //     alert(hoy + " Error de fecha: " + fecha)
-        // }else if(fecha <= hoy){
-        //     alert(hoy + " Fecha correcta: " + fecha)
-        // }else if(fecha != hoy){
-        //     alert(hoy + " Fecha incorrecta: " + fecha)
-        // }
-        // else{
-        //     alert(hoy + " Fecha vacía: " + fecha)
-        // }
-        // alert("Fecha de nacimiento: " + fecha);// No muestra la fecha, sale como undefined
+        // Funcion de mensaje de error
+        function mensajeError(msg){
+            const mensaje = document.getElementById("mensaje");
+            mensaje.textContent = msg;
+        }
     </script>
 </body>
 </html>
