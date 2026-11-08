@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de dados</title>
+    <script>
+        window.onload = function () {
+            function getCookie(name) {
+                let matches = document.cookie.match(new RegExp(
+                    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+                ));
+                return matches ? decodeURIComponent(matches[1]) : undefined;
+            }
+            let userName = getCookie("user"); 
+            let fondo = getCookie("fondo");
+            
+            document.body.style.backgroundColor = fondo;
+            document.getElementById("saludo").textContent = "Hola " + userName; 
+
+            alert("Bienbenido a este juago. A continuacion se le diran las regras de este juego.");
+            alert("El juego consiste en sacar la mayor puntuacion en el dado para poder ir avanzando hasta completar la partida.");
+            // alert("");
+        };
+        function lanzarDados(){
+            let resultado = Math.floor(Math.random() * 6) + 1;
+            document.getElementById("dados").textContent ="Ha salido un: " + resultado;
+        }
+    </script>
+</head>
+
+<body>
+    <h1 id="saludo"></h1>
+
+    <label for="dados">Tirar los Dados</label>
+    <p id="dados"></p>
+    <button onclick="lanzarDados()">Lanzar</button>
+
+</body>
+
+</html>

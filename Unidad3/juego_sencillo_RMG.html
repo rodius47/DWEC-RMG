@@ -10,6 +10,7 @@
             font-family: arial, sans-serif;
         }
     </style>
+    
 </head>
 <body>
     <!-- Creación del perfil del jugador -->
@@ -78,12 +79,16 @@
                 let ultimaLetra = nombre.slice(-1).toLowerCase();
                 if ( ["a", "e", "i", "o", "u"].includes(ultimaLetra) ){
                     document.body.style.backgroundColor = "lightblue";
+                    document.cookie = "fondo=lightblue;";
                     alert("La ultima letra es bocal.");
                 }else{
                     document.body.style.backgroundColor = "lightgreen";
+                    document.cookie = "fondo=lightgreen;";
                     alert("la ultima letra no es una bocal");
                 }
                 alert("Tu nombre de usuario sera: " + nombreUsuario);
+                document.cookie = "user=" + encodeURIComponent(nombreUsuario) + ";";
+                window.open("juego_iniciado_RMG.html");
             }
         }
 
@@ -93,7 +98,11 @@
             mensaje.textContent = msg;
         }
 
+        
+
 
     </script>
+
+
 </body>
 </html>
