@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego de dados</title>
+    <link rel="stylesheet" href="tablero.css">
     <script>
         window.onload = function () {
             function getCookie(name) {
@@ -24,8 +25,20 @@
             // alert("");
         };
         function lanzarDados(){
-            let resultado = Math.floor(Math.random() * 6) + 1;
-            document.getElementById("dados").textContent ="Ha salido un: " + resultado;
+            let resultado = Math.floor(Math.random() * 6) + 1; // Utilizando floor para redondear devolbiendo el entero menor o igual más cercano
+            document.getElementById("dados").textContent = "Ha salido un: " + resultado;
+
+            // Calcular nuevo movimiento
+            posicionActual += resultado;
+
+            // Validar que no se pase del final (casilla 60)
+            if (posicionActual >= CASILLAS_TOTALES) {
+                posicionActual = CASILLAS_TOTALES;
+                document.getElementById("dados").textContent += " - ¡HAS LLEGADO AL CENTRO! 🎉";
+            }
+
+            // Pintar de naranja
+            actualizarPosicionJugador(posicionActual);
         }
     </script>
 </head>
@@ -36,6 +49,83 @@
     <label for="dados">Tirar los Dados</label>
     <p id="dados"></p>
     <button onclick="lanzarDados()">Lanzar</button>
+
+    <div class="tablero" id="tablero"></div>
+    <script>
+        // Posición inicial del jugador
+        let posicionActual = 0; 
+        const CASILLAS_TOTALES = 60; // De 0 a 60
+
+        // Generar la matriz en espiral de fuera hacia dentro (9x9)
+        function generarMatrizEspiral(n) {
+            let matriz = Array(n).fill().map(() => Array(n).fill(-1)); // Con esto se usa el array para los datos
+            let num = 0;
+            let top = 0, bottom = n - 1;
+            let left = 0, right = n - 1;
+
+            while (num <= CASILLAS_TOTALES) {
+                // Fila superior (Izquierda a Derecha)
+                for (let i = left; i <= right && num <= CASILLAS_TOTALES; i++) matriz[top][i] = num++;
+                top++;
+                // Columna derecha (Arriba a Abajo)
+                for (let i = top; i <= bottom && num <= CASILLAS_TOTALES; i++) matriz[i][right] = num++;
+                right--;
+                // Fila inferior (Derecha a Izquierda)
+                for (let i = right; i >= left && num <= CASILLAS_TOTALES; i--) matriz[bottom][i] = num++;
+                bottom--;
+                // Columna izquierda (Abajo a Arriba)
+                for (let i = bottom; i >= top && num <= CASILLAS_TOTALES; i--) matriz[i][left] = num++;
+                left++;
+            }
+            return matriz;
+        }
+
+        // Crear el tablero físicamente en el HTML respetando las posiciones de la espiral
+        function dibujarTablero() {
+            const tamaño = 9; // Grid de 9x9 basta para albergar 61 casillas
+            const matriz = generarMatrizEspiral(tamaño);
+            const contenedor = document.getElementById("tablero");
+
+            for (let i = 0; i < tamaño; i++) {
+                for (let j = 0; j < tamaño; j++) {
+                    let valor = matriz[i][j];
+                    
+                    if (valor !== -1) {
+                        let div = document.createElement("div");
+                        div.className = "casilla";
+                        div.id = "casilla-" + valor;
+                        div.setAttribute("data-num", valor);
+                        div.textContent = valor;
+                        contenedor.appendChild(div);
+                    } else {
+                        // Huecos vacíos en el centro del grid sobrantes (ya que 9x9=81 espacios y solo usamos 61)
+                        let divVacio = document.createElement("div");
+                        contenedor.appendChild(divVacio);
+                    }
+                }
+            }
+            // Pintar la posición inicial
+            actualizarPosicionJugador(0);
+        }
+
+        // Mover el color naranja según la casilla del jugador
+        function actualizarPosicionJugador(nuevaPosicion) {
+            // Quitar naranja a la casilla anterior si existía
+            let anterior = document.querySelector(".casilla.jugador");
+            if (anterior) {
+                anterior.classList.remove("jugador");
+            }
+
+            // Añadir naranja a la nueva casilla
+            let nuevaCasilla = document.getElementById("casilla-" + nuevaPosicion);
+            if (nuevaCasilla) {
+                nuevaCasilla.classList.add("jugador");
+            }
+        }
+
+        // Inicializar el tablero al cargar la página
+        dibujarTablero();
+    </script>
 
 </body>
 

@@ -4,32 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego sencillo para el examen de la unidad 3</title>
-    <style>
+    <!-- <style>
         body{
             background-color: bisque;
             font-family: arial, sans-serif;
         }
-    </style>
-    
-</head>
-<body>
-    <!-- Creación del perfil del jugador -->
-    <div>
-        <label for="nombre">Nombre de Usuario:</label>
-        <input type="text" id="nombre" name="nombre">
-    </div>
-
-    <br>
-
-    <div>
-        <label for="fechaNacimiento">Fecha de nacimiento:</label>
-        <input type="date" id="fechaNacimiento" name="fechaNacimiento">
-        <!-- date se encarga directamente de que la fecha sea menor o igual a hoy -->
-    </div>
-    <br>
-    <button onclick="validarPerfil()">Crear Perfil</button>
-
-    <p id="mensaje" class="mensaje"></p>
+    </style> -->
     
     <script>
 
@@ -102,6 +82,28 @@
 
 
     </script>
+    
+</head>
+<body style="background-color: bisque; font-family: Arial, sans-serif;">
+    <!-- Creación del perfil del jugador -->
+    <div>
+        <label for="nombre">Nombre de Usuario:</label>
+        <input type="text" id="nombre" name="nombre">
+    </div>
+
+    <br>
+
+    <div>
+        <label for="fechaNacimiento">Fecha de nacimiento:</label>
+        <input type="date" id="fechaNacimiento" name="fechaNacimiento">
+        <!-- date se encarga directamente de que la fecha sea menor o igual a hoy -->
+    </div>
+    <br>
+    <button onclick="validarPerfil()">Crear Perfil</button>
+
+    <p id="mensaje" class="mensaje"></p>
+    
+    
 
 
 </body>
