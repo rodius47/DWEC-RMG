@@ -15,12 +15,13 @@
     <label for="dados">Tirar los Dados</label>
     <p id="dados"></p>
     <button id="lanzarDados">Lanzar</button>
+    <p>Tu mejor puntuación: <span id="record"></span></p>
 
     <div class="tablero" id="tablero"></div>
 
     <script>
         // --- VARIABLES GLOBALES ---
-        let posicionActual = 0;
+        let posicionActual = parseInt(sessionStorage.getItem("posicion") || "0", 10);
         const CASILLAS_TOTALES = 60; // De 0 a 60
         const botonLanzar = document.getElementById("lanzarDados");
 
@@ -96,6 +97,7 @@
 
             if (fondo) document.body.style.backgroundColor = fondo;
             document.getElementById("saludo").textContent = "Hola " + (userName || "Jugador");
+            document.getElementById("record").textContent = localStorage.getItem("record") || 0;
 
             alert("Bienvenido a este juego. A continuación se le dirán las reglas de este juego.");
             alert("El juego consiste en sacar la mayor puntuación en el dado para poder ir avanzando hasta completar la partida.");
@@ -115,6 +117,16 @@
                 if (posicionActual >= CASILLAS_TOTALES) {
                     posicionActual = CASILLAS_TOTALES;
                     document.getElementById("dados").textContent += " - ¡HAS LLEGADO AL CENTRO! 🎉";
+                }
+
+                // Guardar la posición de esta pestaña (sessionStorage).
+                sessionStorage.setItem("posicion", posicionActual);
+
+                // Guardar el récord de la máxima casilla alcanzada (localStorage).
+                let mejorPuntuacion = parseInt(localStorage.getItem("record") || "0", 10);
+                if (posicionActual > mejorPuntuacion) {
+                    localStorage.setItem("record", posicionActual);
+                    document.getElementById("record").textContent = posicionActual;
                 }
 
                 // Pintar la posición en el tablero
@@ -144,15 +156,15 @@
                             let datosUltimaFila = filasHistorial[ultimaFila].split(",");
                             datosUltimaFila[1] = posicionActual;
                             filasHistorial[ultimaFila] = datosUltimaFila.join(",");
-
-                            document.cookie = "historial=" +
-                                encodeURIComponent(filasHistorial.join("|")) + "; path=/";
+                            document.cookie = "historial=" + encodeURIComponent(filasHistorial.join("|")) + "; path=/";
                         }
                         if (posicionActual === CASILLAS_TOTALES) {
                             alert("¡Felicidades, dominas JavaScript y ganaste la partida!");
+                            sessionStorage.removeItem("posicion");
                         }
                     } else {
                         alert("Incorrecto o cancelado. Perdiste.");
+                        sessionStorage.removeItem("posicion");
                         window.location.href = "juego_sencillo_RMG.html";
                     }
                 }
@@ -205,8 +217,8 @@
                         }
                     }
                 }
-                // Pintar la posición inicial
-                actualizarPosicionJugador(0);
+                // Pintar la posición guardada en esta sesión
+                actualizarPosicionJugador(posicionActual);
             }
 
             function actualizarPosicionJugador(nuevaPosicion) {

@@ -198,7 +198,7 @@
                 document.cookie = "partida=" + nuevaPartidaNum + "; path=/";
 
                 // SOLUCIÓN AL BUG: Si la cookie puntuacion no existe, usamos 0 en lugar de undefined
-                let puntosIniciales = 0;
+                let puntosIniciales = 0; // Cada partida nueva comienza con cero puntos.
 
                 // Guardar la nueva fila en el Historial general
                 let nuevaFilaTexto = `${nombreUsuarioFinal},${puntosIniciales},${nuevaPartidaNum}`; 
@@ -214,6 +214,9 @@
 
                 // Reiniciamos la cookie de puntuación individual para la nueva partida activa
                 document.cookie = "puntuacion=0; path=/";
+
+                // Una partida nueva empieza en la casilla 0.
+                sessionStorage.removeItem("posicion");
 
                 // Redirección
                 window.location.href = "juego_iniciado_RMG.html";
@@ -238,5 +241,6 @@
 
     <p id="mensaje" class="mensaje"></p>
     <div id="infoJugador"></div> 
+    <p>Tu mejor puntuación: <span id="record"></span></p>
 </body>
 </html>
