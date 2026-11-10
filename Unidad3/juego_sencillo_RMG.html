@@ -4,107 +4,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego sencillo para el examen de la unidad 3</title>
-    <!-- <style>
-        body{
+    <style>
+        body {
             background-color: bisque;
-            font-family: arial, sans-serif;
+            font-family: Arial, sans-serif;
+            padding: 20px;
         }
-    </style> -->
-    
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .mensaje {
+            font-weight: bold;
+            color: red;
+        }
+        #infoJugador {
+            margin-top: 15px;
+            font-style: italic;
+        }
+    </style>
+
     <script>
-
-        // Creacion de funcion validar perfil
-        function validarPerfil(){
-
-             //Todas las constantes que se usan en la pantalla de inicio de sesion
-            const nombre = document.getElementById("nombre").value.trim();
-            const fecha = document.getElementById("fechaNacimiento").value;
-            const mensaje = document.getElementById("mensaje");
-            const edadMinima = 18;
-            
-            
-            //Calculo real de edad
-           
-            const fechaDate = new Date(fecha);
-            const fechaActual = new Date();
-            fechaActual.setHours(0, 0, 0, 0);
-
-            let edad = fechaActual.getFullYear() - fechaDate.getFullYear();
-            // alert("La edad es: " + typeof(edad));
-            alert("La edad es: " + edad +" Fecha insertada "+ fechaDate.getDate()+"/ "+fechaDate.getMonth()+"/ "+ fechaDate.getFullYear()+"/. "+" La fecha actual es "+ fechaActual.getDate()+"/ "+fechaActual.getMonth()+"/ "+ fechaActual.getFullYear()+"/. ");
-            const mes = fechaActual.getMonth() - fechaDate.getMonth();
-
-            if(mes < 0 || (mes === 0 && fechaActual.getDate() < fechaDate.getDate())) {
-                edad--; // Ajuste de edad por mes
-                alert("edad: " + edad);
+        window.onload = function () {
+            // --- 1. FUNCIONES UTILIDADES ---
+            function getCookie(name) {
+                let matches = document.cookie.match(new RegExp(
+                    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+                ));
+                return matches ? decodeURIComponent(matches[1]) : undefined;
             }
-            
 
-            if(!fecha && !nombre){
-                mensajeFinal("Se necesitan los dos campos, Usuario y Fecha de Nacimiento >= 18 años");
-                return;
-            }else if(!fecha || fechaDate > fechaActual){
-                mensajeFinal("Necesita indicar una fecha de nacimiento menor a hoy");
-                return;
-            }else if(edad < edadMinima){
-                mensajeFinal("Debes ser mayor de edad");
-                return;
-            }else if(!nombre){
-                mensajeFinal("Necerita introducir un nombre de Usuario");
-                return;
-            }else{
-                mensajeFinal("Perfil creado, pulse iniciar para jugar");
-                let numero = fechaDate.getFullYear();
+            function mensajeFinal(msg) {
+                const mensaje = document.getElementById("mensaje");
+                mensaje.textContent = msg;
+            }
+
+            // --- 2. CARGA DE COOKIES E INTERFAZ INICIAL ---
+            let userName = getCookie("user");
+            let fondo = getCookie("fondo");
+            let partida = getCookie("partida") || 0;
+
+            if (fondo) {
+                document.body.style.backgroundColor = fondo;
+            }
+
+            const nombrInput = document.getElementById("nombre");
+            if (userName && nombrInput) {
+                nombrInput.value = userName;
+            }
+
+            const infoJugador = document.getElementById("infoJugador");
+            if (userName) {
+                infoJugador.textContent = `Hola ${userName}. Esta es la partida número: ${partida}`;
+            }
+
+            // --- 3. MANEJO DEL EVENTO DE VALIDACIÓN ---
+            const validarBtn = document.getElementById('validar');
+
+            validarBtn.addEventListener("click", function() {
+                // Captura de valores actuales en el momento del clic
+                const nombre = document.getElementById("nombre").value.trim();
+                const fecha = document.getElementById("fechaNacimiento").value;
+
+                if (!fecha || !nombre) {
+                    mensajeFinal("Se necesitan los dos campos: Usuario y Fecha de Nacimiento.");
+                    return;
+                }
+
+                // Cálculo de edad
+                const fechaDate = new Date(fecha);
+                const fechaActual = new Date();
+                fechaActual.setHours(0, 0, 0, 0);
+
+                if (fechaDate > fechaActual) {
+                    mensajeFinal("Necesita indicar una fecha de nacimiento menor a hoy.");
+                    return;
+                }
+
+                let edad = fechaActual.getFullYear() - fechaDate.getFullYear();
+                const mes = fechaActual.getMonth() - fechaDate.getMonth();
+
+                if (mes < 0 || (mes === 0 && fechaActual.getDate() < fechaDate.getDate())) {
+                    edad--; 
+                }
+
+                const edadMinima = 18;
+                if (edad < edadMinima) {
+                    mensajeFinal(`Debes ser mayor de edad (Mínimo ${edadMinima} años).`);
+                    return;
+                }
+
+                // --- 4. REGISTRO EXITOSO Y COOKIES ---
+                mensajeFinal("Perfil creado, redirigiendo al juego...");
+                
                 let nombreUsuario = nombre.replaceAll(" ", "") + "_" + fechaDate.getFullYear();
                 let ultimaLetra = nombre.slice(-1).toLowerCase();
-                if ( ["a", "e", "i", "o", "u"].includes(ultimaLetra) ){
+
+                // Cambiar fondo según la última letra del nombre original
+                if (["a", "e", "i", "o", "u"].includes(ultimaLetra)) {
                     document.body.style.backgroundColor = "lightblue";
-                    document.cookie = "fondo=lightblue;";
-                    alert("La ultima letra es bocal.");
-                }else{
+                    document.cookie = "fondo=lightblue; path=/";
+                    alert("La última letra es una vocal (Fondo Azul).");
+                } else {
                     document.body.style.backgroundColor = "lightgreen";
-                    document.cookie = "fondo=lightgreen;";
-                    alert("la ultima letra no es una bocal");
+                    document.cookie = "fondo=lightgreen; path=/";
+                    alert("La última letra es una consonante (Fondo Verde).");
                 }
-                alert("Tu nombre de usuario sera: " + nombreUsuario);
-                document.cookie = "user=" + encodeURIComponent(nombreUsuario) + ";";
-                window.open("juego_iniciado_RMG.html");
-            }
+
+                alert("Tu nombre de usuario será: " + nombreUsuario);
+                
+                // Guardar datos en cookies compartidas para el sitio
+                document.cookie = "user=" + encodeURIComponent(nombreUsuario) + "; path=/";
+                document.cookie = "partida=0; path=/";
+
+                // Redirección
+                window.location.href = "juego_iniciado_RMG.html";
+            });
         }
-
-        // Funcion de mensaje de error
-        function mensajeFinal(msg){
-            const mensaje = document.getElementById("mensaje");
-            mensaje.textContent = msg;
-        }
-
-        
-
-
     </script>
-    
 </head>
-<body style="background-color: bisque; font-family: Arial, sans-serif;">
+
+<body>
     <!-- Creación del perfil del jugador -->
-    <div>
+    <div class="form-group">
         <label for="nombre">Nombre de Usuario:</label>
         <input type="text" id="nombre" name="nombre">
     </div>
 
-    <br>
-
-    <div>
+    <div class="form-group">
         <label for="fechaNacimiento">Fecha de nacimiento:</label>
         <input type="date" id="fechaNacimiento" name="fechaNacimiento">
-        <!-- date se encarga directamente de que la fecha sea menor o igual a hoy -->
     </div>
-    <br>
-    <button onclick="validarPerfil()">Crear Perfil</button>
+
+    <button id="validar">Crear Perfil</button>
 
     <p id="mensaje" class="mensaje"></p>
-    
-    
-
-
+    <p id="infoJugador"></p>
 </body>
 </html>

@@ -39,6 +39,15 @@
 
             // Pintar de naranja
             actualizarPosicionJugador(posicionActual);
+
+            //Pregunta de casilla
+            let respuesta = confirm(`Casilla ${posicionActual} Responde que si para continuar`);
+            if(respuesta){
+                alert("OK");
+            }else{
+                alert("Incorrecto, Perdistes.");
+                window.location.href = "juego_sencillo_RMG.html" ;
+            }
         }
     </script>
 </head>
