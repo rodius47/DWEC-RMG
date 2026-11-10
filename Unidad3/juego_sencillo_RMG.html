@@ -58,8 +58,8 @@
             let userName = getCookie("user");
             let userFecha = getCookie("fechaNacimiento"); 
             let fondo = getCookie("fondo");
-            let partida = parseInt(getCookie("partida")) || 0;
-            let historialCookie = getCookie("historial") || ""; // Recuperamos la cookie del historial múltiple
+            let puntuacion = getCookie("puntuacion");
+            let historialCookie = getCookie("historial") || "";
 
             if (fondo) {
                 document.body.style.backgroundColor = fondo;
@@ -75,7 +75,7 @@
                 fechaInput.value = userFecha;
             }
 
-            // --- NUEVO: Construcción de la tabla MULTI-FILA desde la cookie ---
+            // --- Construcción de la tabla MULTI-FILA desde la cookie ---
             const infoJugador = document.getElementById("infoJugador");
             
             if (historialCookie) {
@@ -92,12 +92,10 @@
                         <tbody>
                 `;
 
-                // Las partidas están separadas por '|'
                 let filasPartidas = historialCookie.split("|");
                 
                 filasPartidas.forEach(function(filaTexto) {
                     if (filaTexto.trim() !== "") {
-                        // Cada columna está separada por ',' -> [usuario, puntuacion, partida]
                         let columnas = filaTexto.split(",");
                         tablaHTML += `
                             <tr>
@@ -178,12 +176,32 @@
                 // Guardar datos en cookies compartidas
                 document.cookie = "user=" + encodeURIComponent(nombreUsuarioFinal) + "; path=/";
                 document.cookie = "fechaNacimiento=" + encodeURIComponent(fecha) + "; path=/"; 
-                
-                partida++;
-                document.cookie = "partida=" + partida + "; path=/";
 
-                // --- NUEVO: Guardar la nueva partida concatenándola en el Historial ---
-                let nuevaFilaTexto = `${nombreUsuarioFinal},0,${partida}`; // Formato: Usuario,Puntuacion,Partida
+                // --- NUEVO: Calcular número de partida independiente por usuario ---
+                let partidasDelUsuario = 0;
+                
+                if (historialCookie) {
+                    let filas = historialCookie.split("|");
+                    filas.forEach(function(filaTexto) {
+                        if (filaTexto.trim() !== "") {
+                            let columnas = filaTexto.split(",");
+                            // Si el nombre guardado coincide con el que va a jugar ahora, sumamos uno
+                            if (columnas[0] === nombreUsuarioFinal) {
+                                partidasDelUsuario++;
+                            }
+                        }
+                    });
+                }
+                
+                // La partida actual será el total de veces que ha jugado + 1
+                let nuevaPartidaNum = partidasDelUsuario + 1;
+                document.cookie = "partida=" + nuevaPartidaNum + "; path=/";
+
+                // SOLUCIÓN AL BUG: Si la cookie puntuacion no existe, usamos 0 en lugar de undefined
+                let puntosIniciales = 0;
+
+                // Guardar la nueva fila en el Historial general
+                let nuevaFilaTexto = `${nombreUsuarioFinal},${puntosIniciales},${nuevaPartidaNum}`; 
                 
                 let nuevoHistorial;
                 if (historialCookie) {
@@ -193,6 +211,9 @@
                 }
                 
                 document.cookie = "historial=" + encodeURIComponent(nuevoHistorial) + "; path=/";
+
+                // Reiniciamos la cookie de puntuación individual para la nueva partida activa
+                document.cookie = "puntuacion=0; path=/";
 
                 // Redirección
                 window.location.href = "juego_iniciado_RMG.html";
