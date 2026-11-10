@@ -18,8 +18,24 @@
             color: red;
         }
         #infoJugador {
-            margin-top: 15px;
-            font-style: italic;
+            margin-top: 20px;
+        }
+        /* Estilos para la tabla */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 500px;
+            background-color: white;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #ddd;
+            font-weight: bold;
         }
     </style>
 
@@ -40,8 +56,10 @@
 
             // --- 2. CARGA DE COOKIES E INTERFAZ INICIAL ---
             let userName = getCookie("user");
+            let userFecha = getCookie("fechaNacimiento"); 
             let fondo = getCookie("fondo");
-            let partida = getCookie("partida") || 0;
+            let partida = parseInt(getCookie("partida")) || 0;
+            let historialCookie = getCookie("historial") || ""; // Recuperamos la cookie del historial múltiple
 
             if (fondo) {
                 document.body.style.backgroundColor = fondo;
@@ -52,16 +70,56 @@
                 nombrInput.value = userName;
             }
 
+            const fechaInput = document.getElementById("fechaNacimiento");
+            if (userFecha && fechaInput) {
+                fechaInput.value = userFecha;
+            }
+
+            // --- NUEVO: Construcción de la tabla MULTI-FILA desde la cookie ---
             const infoJugador = document.getElementById("infoJugador");
-            if (userName) {
-                infoJugador.textContent = `Hola ${userName}. Esta es la partida número: ${partida}`;
+            
+            if (historialCookie) {
+                let tablaHTML = `
+                    <h3>Historial del Jugador</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Puntuación</th>
+                                <th>Partida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                // Las partidas están separadas por '|'
+                let filasPartidas = historialCookie.split("|");
+                
+                filasPartidas.forEach(function(filaTexto) {
+                    if (filaTexto.trim() !== "") {
+                        // Cada columna está separada por ',' -> [usuario, puntuacion, partida]
+                        let columnas = filaTexto.split(",");
+                        tablaHTML += `
+                            <tr>
+                                <td>${columnas[0]}</td>
+                                <td>${columnas[1]}</td>
+                                <td>${columnas[2]}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                tablaHTML += `
+                        </tbody>
+                    </table>
+                `;
+                infoJugador.innerHTML = tablaHTML;
             }
 
             // --- 3. MANEJO DEL EVENTO DE VALIDACIÓN ---
             const validarBtn = document.getElementById('validar');
 
             validarBtn.addEventListener("click", function() {
-                // Captura de valores actuales en el momento del clic
                 const nombre = document.getElementById("nombre").value.trim();
                 const fecha = document.getElementById("fechaNacimiento").value;
 
@@ -93,13 +151,18 @@
                     return;
                 }
 
-                // --- 4. REGISTRO EXITOSO Y COOKIES ---
-                mensajeFinal("Perfil creado, redirigiendo al juego...");
-                
-                let nombreUsuario = nombre.replaceAll(" ", "") + "_" + fechaDate.getFullYear();
-                let ultimaLetra = nombre.slice(-1).toLowerCase();
+                // --- 4. CONTROL DE EDICIÓN DEL NOMBRE DE USUARIO ---
+                let nombreUsuarioFinal;
 
-                // Cambiar fondo según la última letra del nombre original
+                if (userName && nombre === userName) {
+                    nombreUsuarioFinal = userName;
+                } else {
+                    nombreUsuarioFinal = nombre.replaceAll(" ", "") + "_" + fechaDate.getFullYear();
+                }
+                
+                let nombreBase = nombreUsuarioFinal.split("_")[0];
+                let ultimaLetra = nombreBase.slice(-1).toLowerCase();
+
                 if (["a", "e", "i", "o", "u"].includes(ultimaLetra)) {
                     document.body.style.backgroundColor = "lightblue";
                     document.cookie = "fondo=lightblue; path=/";
@@ -110,11 +173,26 @@
                     alert("La última letra es una consonante (Fondo Verde).");
                 }
 
-                alert("Tu nombre de usuario será: " + nombreUsuario);
+                alert("Tu nombre de usuario será: " + nombreUsuarioFinal);
                 
-                // Guardar datos en cookies compartidas para el sitio
-                document.cookie = "user=" + encodeURIComponent(nombreUsuario) + "; path=/";
-                document.cookie = "partida=0; path=/";
+                // Guardar datos en cookies compartidas
+                document.cookie = "user=" + encodeURIComponent(nombreUsuarioFinal) + "; path=/";
+                document.cookie = "fechaNacimiento=" + encodeURIComponent(fecha) + "; path=/"; 
+                
+                partida++;
+                document.cookie = "partida=" + partida + "; path=/";
+
+                // --- NUEVO: Guardar la nueva partida concatenándola en el Historial ---
+                let nuevaFilaTexto = `${nombreUsuarioFinal},0,${partida}`; // Formato: Usuario,Puntuacion,Partida
+                
+                let nuevoHistorial;
+                if (historialCookie) {
+                    nuevoHistorial = historialCookie + "|" + nuevaFilaTexto;
+                } else {
+                    nuevoHistorial = nuevaFilaTexto;
+                }
+                
+                document.cookie = "historial=" + encodeURIComponent(nuevoHistorial) + "; path=/";
 
                 // Redirección
                 window.location.href = "juego_iniciado_RMG.html";
@@ -138,6 +216,6 @@
     <button id="validar">Crear Perfil</button>
 
     <p id="mensaje" class="mensaje"></p>
-    <p id="infoJugador"></p>
+    <div id="infoJugador"></div> 
 </body>
 </html>
