@@ -6,24 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego de dados</title>
     <link rel="stylesheet" href="tablero.css">
-</head>
-
-<body>
-
-    <h1 id="saludo"></h1>
-
-    <label for="dados">Tirar los Dados</label>
-    <p id="dados"></p>
-    <button id="lanzarDados">Lanzar</button>
-    <p>Tu mejor puntuación: <span id="record"></span></p>
-
-    <div class="tablero" id="tablero"></div>
 
     <script>
-        // --- VARIABLES GLOBALES ---
-        let posicionActual = parseInt(sessionStorage.getItem("posicion") || "0", 10);
-        const CASILLAS_TOTALES = 60; // De 0 a 60
-        const botonLanzar = document.getElementById("lanzarDados");
+        
 
         // --- BANCO DE PREGUNTAS JAVASCRIPT (Casillas 1 a 60) ---
         const preguntasCasillas = {
@@ -91,8 +76,20 @@
 
         // --- EVENTO DE CARGA DE LA PÁGINA ---
         window.onload = function () {
+            let win = window.frames.example;
+
+            
+            // --- VARIABLES GLOBALES ---
+            let posicionActual = parseInt(sessionStorage.getItem("posicion") || "0", 10);
             let userName = getCookie("user");
             let fondo = getCookie("fondo");
+            let params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=600,height=400,left=100,top=100`;
+
+            const CASILLAS_TOTALES = 60; // De 0 a 60
+            const botonLanzar = document.getElementById("lanzarDados");
+            const botonRuleta = document.getElementById("ruleta");
+            if (getCookie("ruleta")) botonRuleta.classList.add("usado");
+            
 
 
             if (fondo) document.body.style.backgroundColor = fondo;
@@ -106,48 +103,92 @@
             dibujarTablero();
 
             // --- LÓGICA DEL JUEGO ---
+            // Prepara la pregunta eliminando únicamente respuestas incorrectas.
+            function prepararOpciones(datosPregunta, numeroEliminar) {
+                const indiceCorrecto = datosPregunta.correcta - 1;
+                const correcta = datosPregunta.opciones[indiceCorrecto];
+
+                let incorrectas = datosPregunta.opciones.filter(
+                    (_, indice) => indice !== indiceCorrecto
+                );
+
+                // Mezclar las incorrectas para elegir al azar cuáles eliminar.
+                incorrectas.sort(() => Math.random() - 0.5);
+
+                const restantes = incorrectas.slice(Math.max(0, numeroEliminar));
+                const opciones = [correcta, ...restantes];
+
+                // Mezclar la correcta con las respuestas que quedan.
+                opciones.sort(() => Math.random() - 0.5);
+
+                return {
+                    opciones: opciones.map((opcion, indice) =>
+                        (indice + 1) + ". " + opcion.replace(/^\d+\.\s*/, "")
+                    ),
+                    correcta: opciones.indexOf(correcta) + 1
+                };
+            }
+
             botonLanzar.addEventListener("click", function () {
-                let resultado = Math.floor(Math.random() * 6) + 1;
-                document.getElementById("dados").textContent = "Ha salido un: " + resultado;
 
-                // Calcular nuevo movimiento
-                posicionActual += resultado;
+                let resultadoDado = Math.floor(Math.random() * 6) + 1;
+                document.getElementById("dados").textContent = "Ha salido un: " + resultadoDado;
 
-                // Validar que no se pase del final (casilla 60)
+                posicionActual += resultadoDado;
+
                 if (posicionActual >= CASILLAS_TOTALES) {
                     posicionActual = CASILLAS_TOTALES;
                     document.getElementById("dados").textContent += " - ¡HAS LLEGADO AL CENTRO! 🎉";
                 }
 
-                // Guardar la posición de esta pestaña (sessionStorage).
-                sessionStorage.setItem("posicion", posicionActual);
-
-                // Guardar el récord de la máxima casilla alcanzada (localStorage).
-                let mejorPuntuacion = parseInt(localStorage.getItem("record") || "0", 10);
-                if (posicionActual > mejorPuntuacion) {
-                    localStorage.setItem("record", posicionActual);
-                    document.getElementById("record").textContent = posicionActual;
-                }
-
-                // Pintar la posición en el tablero
                 actualizarPosicionJugador(posicionActual);
 
-                // Sistema de trivias de JavaScript
                 let datosPregunta = preguntasCasillas[posicionActual];
-                if (datosPregunta) {
-                    let mensajePregunta =
+                if (!datosPregunta) return;
+
+                let ventanaEmergente = null;
+                let preguntaResuelta = false;
+
+                function cerrarPopup() {
+                    if (ventanaEmergente && !ventanaEmergente.closed) {
+                        ventanaEmergente.close();
+                    }
+                }
+
+                function mostrarPregunta(numeroEliminar) {
+                    if (preguntaResuelta) return;
+                    preguntaResuelta = true;
+
+                    const preguntaPreparada = prepararOpciones(datosPregunta, numeroEliminar);
+                    const mensajePregunta =
                         "CASILLA " + posicionActual + "\n\n" +
                         datosPregunta.q + "\n\n" +
-                        datosPregunta.opciones.join("\n") + "\n\n" +
-                        "Escribe el número de tu respuesta (1, 2, 3 o 4):";
-                    let respuestaUsuario = prompt(mensajePregunta);
-                    let respuestaConvertida = parseInt(respuestaUsuario);
-                    if (respuestaConvertida === datosPregunta.correcta) {
+                        preguntaPreparada.opciones.join("\n") + "\n\n" +
+                        "Escribe el número de tu respuesta:";
+
+                    const respuestaUsuario = prompt(mensajePregunta);
+                    const respuestaConvertida = parseInt(respuestaUsuario, 10);
+
+                    cerrarPopup();
+                    window.removeEventListener("message", recibirMensaje);
+
+                    if (respuestaConvertida === preguntaPreparada.correcta) {
+                        botonRuleta.classList.add("usado");
+                        if (numeroEliminar !== null) {
+                            document.cookie = "ruleta=usado; path=/";
+                        }
+
+                        sessionStorage.setItem("posicion", posicionActual);
+
+                        let mejorPuntuacion = parseInt(localStorage.getItem("record") || "0", 10);
+                        if (posicionActual > mejorPuntuacion) {
+                            localStorage.setItem("record", posicionActual);
+                            document.getElementById("record").textContent = posicionActual;
+                        }
+
                         alert("¡Correcto! Continúas en el juego.");
-                        // Guardar la puntuación de la partida actual.
                         document.cookie = "puntuacion=" + posicionActual + "; path=/";
 
-                        // Actualizar la puntuación de la última partida del historial.
                         let historialActual = getCookie("historial") || "";
                         let filasHistorial = historialActual.split("|");
                         let ultimaFila = filasHistorial.length - 1;
@@ -158,6 +199,7 @@
                             filasHistorial[ultimaFila] = datosUltimaFila.join(",");
                             document.cookie = "historial=" + encodeURIComponent(filasHistorial.join("|")) + "; path=/";
                         }
+
                         if (posicionActual === CASILLAS_TOTALES) {
                             alert("¡Felicidades, dominas JavaScript y ganaste la partida!");
                             sessionStorage.removeItem("posicion");
@@ -167,6 +209,45 @@
                         sessionStorage.removeItem("posicion");
                         window.location.href = "juego_sencillo_RMG.html";
                     }
+                }
+
+                function recibirMensaje(event) {
+                    if (!ventanaEmergente || event.source !== ventanaEmergente) return;
+
+                    if (event.data && event.data.tipo === "ruleta-rechazada") {
+                        cerrarPopup();
+                        window.removeEventListener("message", recibirMensaje);
+                        mostrarPregunta(0);
+                    }
+
+                    if (event.data && event.data.tipo === "ruleta-resultado") {
+                        // null significa "sin efecto": no se elimina ninguna opción.
+                        const eliminadas = event.data.resultado === null
+                            ? 0
+                            : Number(event.data.resultado);
+
+                        mostrarPregunta(eliminadas);
+                    }
+                }
+
+                // Si ya se utilizó el comodín, se pregunta sin volver a abrirlo.
+                if (getCookie("ruleta")) {
+                    botonRuleta.classList.add("usado");
+                    mostrarPregunta(0);
+                    return;
+                }
+
+                window.addEventListener("message", recibirMensaje);
+                ventanaEmergente = window.open(
+                    "comodinRuleta.html",
+                    "comodinRuleta",
+                    params
+                );
+
+                // Si el navegador bloquea la ventana emergente, continuar sin comodín.
+                if (!ventanaEmergente) {
+                    window.removeEventListener("message", recibirMensaje);
+                    mostrarPregunta(0);
                 }
             });
 
@@ -244,6 +325,27 @@
 
 
     </script>
+
+</head>
+
+<body>
+
+    <h1 id="saludo"></h1>
+
+    <label for="dados">Tirar los Dados</label>
+    <p id="dados"></p>
+    <button id="lanzarDados">Lanzar</button>
+    <p>Tu mejor puntuación: <span id="record"></span></p>
+
+    <div class="tablero" id="tablero"></div>
+
+    <!-- Creación de los comodines de Popup 50/50 y ruleta -->
+
+     <div class="comodinBox">
+        <!-- <button id="fifty" class="comodin">50/50</button> -->
+        <button id="ruleta" class="comodin">Ruleta</button>
+     </div>
+
 
 </body>
 

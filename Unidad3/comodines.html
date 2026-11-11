@@ -1,0 +1,509 @@
+<!-- <!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comodin de la Ruleta</title>
+    <style>
+        #circulo {
+            /* Efecto de frenado suave durante 4 segundos */
+            transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- seis 1, seis 2, un 3, tres, 0  -->
+    <canvas id="circulo" width="300" height="300"></canvas>
+    <br>
+    <button onclick="girarRuleta()">Girar</button>
+
+    <script>
+
+        let confirmar = confirm("Tienes el comodín de la Ruleta\n¿Quieres utilizarlo?");
+
+        function obtenerResultadoRuleta() {
+            const opciones = [
+                0, 0, 0,
+                1, 1, 1, 1,
+                2, 2, 2, 2,
+                3
+            ];
+
+            const indice = Math.floor(Math.random() * opciones.length);
+
+            return opciones[indice];
+        }
+
+        if (confirmar) {
+
+            const canvas = document.getElementById('circulo');
+            const ctx = canvas.getContext('2d');
+            const centro = canvas.width / 2;
+            const franjas = 16;
+            const angulo = (2 * Math.PI) / franjas;
+
+            let rotacionActual = 0;
+
+            // Dibujar la ruleta
+            for (let i = 0; i < franjas; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centro, centro);
+                ctx.arc(centro, centro, 140, i * angulo, (i + 1) * angulo);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? '#e74c3c' : '#f1c40f';
+                ctx.fill();
+            }
+
+            // Comunicar a la ventana principal que ha aceptado
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage("ruleta-aceptada", "*");
+            }
+
+            // Función para girar la ruleta
+            window.girarRuleta = function () {
+                window.girarRuleta = function () {
+
+                    const resultado = obtenerResultadoRuleta();
+
+                    // Giro visual de varias vueltas.
+                    const giroExtra = 1800 + Math.floor(Math.random() * 360);
+
+                    rotacionActual += giroExtra;
+
+                    canvas.style.transform = `rotate(${rotacionActual}deg)`;
+
+                    // Esperar a que termine la animación.
+                    canvas.addEventListener("transitionend", function () {
+
+                        alert("Ha salido: " + resultado);
+
+                        if (window.opener && !window.opener.closed) {
+                            window.opener.postMessage({
+                                tipo: "ruleta-resultado",
+                                resultado: resultado
+                            }, window.location.origin);
+                        }
+
+                    }, { once: true });
+                };
+            };
+
+        } else {
+
+            // Comunicar que ha rechazado el comodín
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage("ruleta-rechazada", "*");
+            }
+
+            window.close();
+        }
+
+
+    </script>
+
+
+</body>
+
+</html> -->
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de dados</title>
+    <link rel="stylesheet" href="tablero.css">
+
+    <script>
+
+        // --- DISTINCION DE PREGUNTAS ELIMINADAS
+
+        function prepararOpciones(datosPregunta, numeroRuleta) {
+
+            // Obtener la respuesta correcta.
+            const indiceCorrecto = datosPregunta.correcta - 1;
+            const correcta = datosPregunta.opciones[indiceCorrecto];
+
+            // Obtener las respuestas incorrectas.
+            let incorrectas = datosPregunta.opciones.filter(
+                (_, indice) => indice !== indiceCorrecto
+            );
+
+            // Mezclar las respuestas incorrectas.
+            incorrectas.sort(() => Math.random() - 0.5);
+
+            // Eliminar tantas incorrectas como indique la ruleta.
+            let incorrectasRestantes = incorrectas.slice(
+                numeroRuleta
+            );
+
+            // Juntar la correcta con las incorrectas restantes.
+            let opcionesFinales = [
+                correcta,
+                ...incorrectasRestantes
+            ];
+
+            // Mezclar para que la correcta no esté siempre en la misma posición.
+            opcionesFinales.sort(() => Math.random() - 0.5);
+
+            return {
+                opciones: opcionesFinales,
+                correcta: opcionesFinales.indexOf(correcta) + 1
+            };
+        }
+
+
+        // --- BANCO DE PREGUNTAS JAVASCRIPT (Casillas 1 a 60) ---
+        const preguntasCasillas = {
+            1: { q: "¿Qué palabra clave se usa para declarar una variable que no cambiará su valor?", opciones: ["1. var", "2. let", "3. const", "4. static"], correcta: 3 },
+            2: { q: "¿Cuál de estos métodos muestra un mensaje emergente de alerta?", opciones: ["1. console.log()", "2. alert()", "3. prompt()", "4. confirm()"], correcta: 2 },
+            3: { q: "¿Cómo se escribe un comentario de una sola línea en JavaScript?", opciones: ["1. <!-- comentario -->", "2. // comentario", "3. /* comentario */", "4. # comentario"], correcta: 2 },
+            4: { q: "¿Qué tipo de dato devuelve 'typeof true'?", opciones: ["1. string", "2. number", "3. boolean", "4. undefined"], correcta: 3 },
+            5: { q: "¿Qué símbolo se utiliza para la asignación de valores?", opciones: ["1. =", "2. ==", "3. ===", "4. :="], correcta: 1 },
+            6: { q: "¿Cómo se define una función tradicional en JavaScript?", opciones: ["1. function miFuncion()", "2. def miFuncion()", "3. func miFuncion()", "4. new function()"], correcta: 1 },
+            7: { q: "¿Qué método se usa para agregar un elemento al final de un Array?", opciones: ["1. pop()", "2. shift()", "3. push()", "4. unshift()"], correcta: 3 },
+            8: { q: "¿Qué operador comprueba la igualdad de valor y de tipo estricto?", opciones: ["1. =", "2. ==", "3. ===", "4. !="], correcta: 3 },
+            9: { q: "¿Qué etiqueta HTML se utiliza para insertar código JavaScript?", opciones: ["1. <js>", "2. <scripting>", "3. <javascript>", "4. <script>"], correcta: 4 },
+            10: { q: "¿Qué objeto nativo se utiliza para realizar operaciones matemáticas?", opciones: ["1. Math", "2. Mathematics", "3. Calcular", "4. Number"], correcta: 1 },
+            11: { q: "¿Cuál es el índice del primer elemento en un Array?", opciones: ["1. 1", "2. 0", "3. -1", "4. any"], correcta: 2 },
+            12: { q: "¿Qué método convierte un texto a letras mayúsculas?", opciones: ["1. toUpper()", "2. toUpperCase()", "3. upper()", "4. upperCase()"], correcta: 2 },
+            13: { q: "¿Cómo se llama el bucle que se ejecuta al menos una vez antes de verificar la condición?", opciones: ["1. for", "2. while", "3. do...while", "4. foreach"], correcta: 3 },
+            14: { q: "¿Qué valor representa la ausencia intencionada de cualquier valor de objeto?", opciones: ["1. undefined", "2. null", "3. NaN", "4. false"], correcta: 2 },
+            15: { q: "¿Qué significa 'NaN' en JavaScript?", opciones: ["1. Not a Number", "2. New and Null", "3. Name and Number", "4. No Active Network"], correcta: 1 },
+            16: { q: "¿Qué operador se utiliza para el residuo de una división?", opciones: ["1. /", "2. %", "3. &", "4. *"], correcta: 2 },
+            17: { q: "¿Qué método elimina el último elemento de un Array?", opciones: ["1. push()", "2. shift()", "3. pop()", "4. splice()"], correcta: 3 },
+            18: { q: "¿Cómo se concatena texto usando plantillas literales (Template Literals)?", opciones: ["1. 'Texto ' + var", "2. `Texto ${var}`", "3. \"Texto \" . var", "4. [Texto var]"], correcta: 2 },
+            19: { q: "¿Qué propiedad devuelve la cantidad de elementos en un Array?", opciones: ["1. size", "2. count", "3. length", "4. index"], correcta: 3 },
+            20: { q: "¿Cuál es el resultado de '5' + 5 en JavaScript?", opciones: ["1. 10", "2. 55", "3. NaN", "4. Error"], correcta: 2 },
+            21: { q: "¿Qué método selecciona un elemento HTML usando su atributo ID?", opciones: ["1. getElementById()", "2. querySelectorID()", "3. findElement()", "4. getByClass()"], correcta: 1 },
+            22: { q: "¿Qué operador lógico representa el 'O' (OR)?", opciones: ["1. &&", "2. ||", "3. !", "4. ??"], correcta: 2 },
+            23: { q: "¿Qué operador lógico representa el 'Y' (AND)?", opciones: ["1. &&", "2. ||", "3. !", "4. =="], correcta: 1 },
+            24: { q: "¿Qué método redondea un número hacia el entero más bajo?", opciones: ["1. Math.ceil()", "2. Math.floor()", "3. Math.round()", "4. Math.abs()"], correcta: 2 },
+            25: { q: "¿Cuál es la forma correcta de escribir un Array en JavaScript?", opciones: ["1. [1, 2, 3]", "2. {1, 2, 3}", "3. (1, 2, 4)", "4. <1, 2, 3>"], correcta: 1 },
+            26: { q: "¿Qué método se usa para convertir un string en un número entero?", opciones: ["1. parseInteger()", "2. parseInt()", "3. Number.toInt()", "4. toInt()"], correcta: 2 },
+            27: { q: "¿Cómo se accede al primer elemento de un array llamado 'datos'?", opciones: ["1. datos(0)", "2. datos[0]", "3. datos.first()", "4. datos{0}"], correcta: 2 },
+            28: { q: "¿Qué palabra clave se usa para salir anticipadamente de un bucle?", opciones: ["1. stop", "2. exit", "3. break", "4. return"], correcta: 3 },
+            29: { q: "¿Qué evento ocurre cuando un usuario hace clic en un elemento HTML?", opciones: ["1. onmouseover", "2. onchange", "3. onclick", "4. onkeydown"], correcta: 3 },
+            30: { q: "¿Qué propiedad se usa para cambiar el contenido de texto de un elemento HTML?", opciones: ["1. textContent", "2. innerStyle", "3. setContent", "4. value"], correcta: 1 },
+            31: { q: "¿Cuál de las siguientes NO es una palabra reservada en JavaScript?", opciones: ["1. function", "2. program", "3. switch", "4. return"], correcta: 2 },
+            32: { q: "¿Qué palabra clave se utiliza para lanzar una excepción personalizada?", opciones: ["1. catch", "2. throw", "3. try", "4. error"], correcta: 2 },
+            33: { q: "¿Qué método de consola se usa para imprimir advertencias en amarillo?", opciones: ["1. console.log()", "2. console.error()", "3. console.warn()", "4. console.info()"], correcta: 3 },
+            34: { q: "¿Qué tipo de bucle es ideal cuando conoces el número exacto de iteraciones?", opciones: ["1. while", "2. do...while", "3. for", "4. for...in"], correcta: 3 },
+            35: { q: "¿Qué devuelve la expresión 'Boolean(0)'?", opciones: ["1. true", "2. false", "3. null", "4. undefined"], correcta: 2 },
+            36: { q: "¿Cómo se llama una función que se pasa a otra función como argumento?", opciones: ["1. Callback", "2. Arrow function", "3. Nested function", "4. Method"], correcta: 1 },
+            37: { q: "¿Cuál es el resultado de Math.random()?", opciones: ["1. Un número del 1 al 10", "2. Un número decimal entre 0 y 1", "3. Un número entero aleatorio", "4. Un booleano aleatorio"], correcta: 2 },
+            38: { q: "¿Qué extensión de archivo se utiliza comúnmente para archivos de JavaScript?", opciones: ["1. .java", "2. .js", "3. .javascript", "4. .script"], correcta: 2 },
+            39: { q: "¿Cuál es la sintaxis correcta de una función flecha (Arrow Function)?", opciones: ["1. () => {}", "2. () -> {}", "3. function => {}", "4. arrow() {}"], correcta: 1 },
+            40: { q: "¿A qué objeto global pertenece el árbol DOM de una página web en el navegador?", opciones: ["1. window", "2. document", "3. console", "4. navigator"], correcta: 2 },
+            41: { q: "¿Qué operador condicional ternario se usa como atajo para un 'if...else'?", opciones: ["1. ? :", "2. if ? else", "3. && ||", "4. ?? :"], correcta: 1 },
+            42: { q: "¿Qué estructura se usa para evaluar múltiples casos basados en el valor de una variable?", opciones: ["1. switch", "2. if else", "3. multicais", "4. for case"], correcta: 1 },
+            43: { q: "¿Qué método se utiliza para retrasar la ejecución de una función un tiempo determinado?", opciones: ["1. delay()", "2. setTimeout()", "3. setInterval()", "4. sleep()"], correcta: 2 },
+            44: { q: "¿Cómo se añade una clase CSS a un elemento usando JavaScript?", opciones: ["1. elemento.style.add()", "2. elemento.classList.add()", "3. elemento.setClass()", "4. elemento.className = true"], correcta: 2 },
+            45: { q: "¿Qué tipo de dato es un conjunto de pares clave-valor encerrados en llaves?", opciones: ["1. Array", "2. Object", "3. String", "4. Function"], correcta: 2 },
+            46: { q: "¿Qué método quita el primer elemento de un Array?", opciones: ["1. shift()", "2. pop()", "3. unshift()", "4. slice()"], correcta: 1 },
+            47: { q: "¿Cuál es el resultado de la expresión 'typeof []'?", opciones: ["1. array", "2. object", "3. collection", "4. undefined"], correcta: 2 },
+            48: { q: "¿Qué palabra clave se usa dentro de un objeto para referirse al propio objeto?", opciones: ["1. self", "2. object", "3. this", "4. super"], correcta: 3 },
+            49: { q: "¿Qué método se utiliza para convertir un objeto de JavaScript en una cadena JSON?", opciones: ["1. JSON.parse()", "2. JSON.stringify()", "3. JSON.toString()", "4. JSON.objectify()"], correcta: 2 },
+            50: { q: "¿Qué método se utiliza para convertir una cadena JSON en un objeto JavaScript?", opciones: ["1. JSON.parse()", "2. JSON.stringify()", "3. JSON.toObject()", "4. JSON.convert()"], correcta: 1 },
+            51: { q: "¿Qué método busca un elemento en un array y devuelve su posición (índice)?", opciones: ["1. find()", "2. indexOf()", "3. search()", "4. positionOf()"], correcta: 2 },
+            52: { q: "¿Cuál es la forma correcta de comprobar si una variable es estrictamente desigual a otra?", opciones: ["1. !==", "2. !=", "3. <>,", "4. not="], correcta: 1 },
+            53: { q: "¿Qué método ejecuta una función repetidamente cada cierto intervalo de tiempo?", opciones: ["1. setTimeout()", "2. setInterval()", "3. runEvery()", "4. repeat()"], correcta: 2 },
+            54: { q: "¿Qué método crea un nuevo array con todos los elementos que cumplan una condición?", opciones: ["1. filter()", "2. map()", "3. find()", "4. reduce()"], correcta: 1 },
+            55: { q: "¿Qué método permite unir todos los elementos de un array en una sola cadena de texto?", opciones: ["1. concat()", "2. split()", "3. join()", "4. merge()"], correcta: 3 },
+            56: { q: "¿Qué método divide un String en un Array de subcadenas basándose en un separador?", opciones: ["1. divide()", "2. split()", "3. slice()", "4. cut()"], correcta: 2 },
+            57: { q: "¿Cuál es el resultado de 'Boolean(Hello)'?", opciones: ["1. true", "2. false", "3. NaN", "4. Error"], correcta: 1 },
+            58: { q: "¿Qué palabra clave detiene la iteración actual de un bucle y salta a la siguiente?", opciones: ["1. break", "2. continue", "3. skip", "4. next"], correcta: 2 },
+            59: { q: "¡Casi terminas! ¿Qué objeto se usa para capturar errores en un bloque try...catch?", opciones: ["1. Error", "2. Exception", "3. Bug", "4. Crash"], correcta: 1 },
+            60: { q: "¡PREGUNTA FINAL! ¿Cuál es el entorno de ejecución que permite usar JavaScript en el servidor?", opciones: ["1. Apache", "2. Node.js", "3. Tomcat", "4. Django"], correcta: 2 }
+        };
+
+        // --- EVENTO DE CARGA DE LA PÁGINA ---
+        window.onload = function () {
+            let win = window.frames.example;
+
+
+            // --- VARIABLES GLOBALES ---
+            let posicionActual = parseInt(sessionStorage.getItem("posicion") || "0", 10);
+            let userName = getCookie("user");
+            let fondo = getCookie("fondo");
+            let params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=600,height=400,left=100,top=100`;
+
+            const CASILLAS_TOTALES = 60; // De 0 a 60
+            const botonLanzar = document.getElementById("lanzarDados");
+            const botonRuleta = document.getElementById("ruleta");
+            // Si la ruleta ya se ha utilizado, mostrar el botón como usado
+            if (getCookie("ruleta")) {
+                botonRuleta.classList.add("usado");
+            }
+
+
+
+            if (fondo) document.body.style.backgroundColor = fondo;
+            document.getElementById("saludo").textContent = "Hola " + (userName || "Jugador");
+            document.getElementById("record").textContent = localStorage.getItem("record") || 0;
+
+            alert("Bienvenido a este juego. A continuación se le dirán las reglas de este juego.");
+            alert("El juego consiste en sacar la mayor puntuación en el dado para poder ir avanzando hasta completar la partida.");
+
+            // Inicializar el tablero físicamente
+            dibujarTablero();
+
+            // --- LÓGICA DEL JUEGO ---
+
+            botonLanzar.addEventListener("click", function () {
+
+                let resultado = Math.floor(Math.random() * 6) + 1;
+                document.getElementById("dados").textContent = "Ha salido un: " + resultado;
+
+                posicionActual += resultado;
+
+                if (posicionActual >= CASILLAS_TOTALES) {
+                    posicionActual = CASILLAS_TOTALES;
+                    document.getElementById("dados").textContent +=
+                        " - ¡HAS LLEGADO AL CENTRO!";
+                }
+
+                actualizarPosicionJugador(posicionActual);
+
+                // Variable para controlar si se ha aceptado la ruleta
+                let ventanaEmergente = null;
+                let ruletaAceptada = false;
+
+                // Función que muestra la pregunta
+                function procesarPregunta() {
+
+                    let datosPregunta = preguntasCasillas[posicionActual];
+
+                    if (!datosPregunta) return;
+
+                    let mensajePregunta =
+                        "CASILLA " + posicionActual + "\n\n" +
+                        datosPregunta.q + "\n\n" +
+                        datosPregunta.opciones.join("\n") + "\n\n" +
+                        "Escribe el número de tu respuesta (1, 2, 3 o 4):";
+
+                    let respuestaUsuario = prompt(mensajePregunta);
+                    let respuestaConvertida = parseInt(respuestaUsuario, 10);
+
+                    // Cerrar el popup después de responder
+                    if (ventanaEmergente && !ventanaEmergente.closed) {
+                        ventanaEmergente.close();
+                    }
+
+                    // Marcar la ruleta como utilizada si se aceptó
+                    if (ruletaAceptada) {
+                        botonRuleta.classList.add("usado");
+                    }
+
+                    if (respuestaConvertida === datosPregunta.correcta) {
+
+                        sessionStorage.setItem("posicion", posicionActual);
+
+                        // Actualizar récord
+                        let mejorPuntuacion =
+                            parseInt(localStorage.getItem("record") || "0", 10);
+
+                        if (posicionActual > mejorPuntuacion) {
+                            localStorage.setItem("record", posicionActual);
+                            document.getElementById("record").textContent = posicionActual;
+                        }
+
+                        alert("¡Correcto! Continúas en el juego.");
+
+                        document.cookie = "puntuacion=" + posicionActual + "; path=/";
+
+                        // Actualizar historial
+                        let historialActual = getCookie("historial") || "";
+                        let filasHistorial = historialActual.split("|");
+                        let ultimaFila = filasHistorial.length - 1;
+
+                        if (filasHistorial[ultimaFila]) {
+                            let datosUltimaFila = filasHistorial[ultimaFila].split(",");
+                            datosUltimaFila[1] = posicionActual;
+                            filasHistorial[ultimaFila] = datosUltimaFila.join(",");
+
+                            document.cookie = "historial=" +
+                                encodeURIComponent(filasHistorial.join("|")) + "; path=/";
+                        }
+
+                        if (posicionActual === CASILLAS_TOTALES) {
+                            alert("¡Felicidades, dominas JavaScript y ganaste la partida!");
+                            sessionStorage.removeItem("posicion");
+                            document.cookie = "ruleta=; max-age=0; path=/";
+                        }
+
+                    } else {
+
+                        alert("Incorrecto o cancelado. Perdiste.");
+
+                        sessionStorage.removeItem("posicion");
+
+                        document.cookie = "ruleta=; max-age=0; path=/";
+
+                        window.location.href = "juego_sencillo_RMG.html";
+                    }
+                }
+
+                // Comprobar si la ruleta ya se ha utilizado
+                if (getCookie("ruleta")) {
+
+                    botonRuleta.classList.add("usado");
+
+                    // Si ya se utilizó, mostrar directamente la pregunta
+                    procesarPregunta();
+
+                } else {
+
+                    // Escuchar el mensaje que envía el popup
+                    function recibirMensaje(event) {
+
+                        // Comprobar que el mensaje procede de nuestro popup
+                        if (event.source !== ventanaEmergente) return;
+
+                        if (event.data === "ruleta-aceptada") {
+
+                            ruletaAceptada = true;
+
+                            // Guardar que se ha utilizado la ruleta
+                            document.cookie = "ruleta=usado; path=/";
+
+                            window.removeEventListener("message", recibirMensaje);
+
+                            procesarPregunta();
+
+                        } else if (event.data === "ruleta-rechazada") {
+
+                            window.removeEventListener("message", recibirMensaje);
+
+                            procesarPregunta();
+                        }
+                    }
+
+                    window.addEventListener("message", recibirMensaje);
+
+                    // Abrir el popup
+                    ventanaEmergente = window.open(
+                        "comodinRuleta.html",
+                        "comodinRuleta",
+                        params
+                    );
+
+                    // Si el navegador bloquea el popup
+                    if (!ventanaEmergente) {
+                        window.removeEventListener("message", recibirMensaje);
+                        procesarPregunta();
+                    }
+                }
+
+            });
+
+
+
+            // --- FUNCIONES DEL TABLERO ---
+            function generarMatrizEspiral(n) {
+                let matriz = Array(n).fill().map(() => Array(n).fill(-1));
+                let num = 0;
+                let top = 0, bottom = n - 1;
+                let left = 0, right = n - 1;
+
+                while (num <= CASILLAS_TOTALES) {
+                    // Fila superior (Izquierda a Derecha)
+                    for (let i = left; i <= right && num <= CASILLAS_TOTALES; i++) matriz[top][i] = num++;
+                    top++;
+                    // Columna derecha (Arriba a Abajo)
+                    for (let i = top; i <= bottom && num <= CASILLAS_TOTALES; i++) matriz[i][right] = num++;
+                    right--;
+                    // Fila inferior (Derecha a Izquierda)
+                    for (let i = right; i >= left && num <= CASILLAS_TOTALES; i--) matriz[bottom][i] = num++;
+                    bottom--;
+                    // Columna izquierda (Abajo a Arriba)
+                    for (let i = bottom; i >= top && num <= CASILLAS_TOTALES; i--) matriz[i][left] = num++;
+                    left++;
+                }
+                return matriz;
+            }
+
+            function dibujarTablero() {
+                const tamaño = 9;
+                const matriz = generarMatrizEspiral(tamaño);
+                const contenedor = document.getElementById("tablero");
+                contenedor.innerHTML = ""; // Limpiar contenedor por seguridad
+
+                for (let i = 0; i < tamaño; i++) {
+                    for (let j = 0; j < tamaño; j++) {
+                        let valor = matriz[i][j];
+
+                        if (valor !== -1) {
+                            let div = document.createElement("div");
+                            div.className = "casilla";
+                            div.id = "casilla-" + valor;
+                            div.setAttribute("data-num", valor);
+                            div.textContent = valor;
+                            contenedor.appendChild(div);
+                        } else {
+                            let divVacio = document.createElement("div");
+                            contenedor.appendChild(divVacio);
+                        }
+                    }
+                }
+                // Pintar la posición guardada en esta sesión
+                actualizarPosicionJugador(posicionActual);
+            }
+
+            function actualizarPosicionJugador(nuevaPosicion) {
+                let anterior = document.querySelector(".casilla.jugador");
+                if (anterior) {
+                    anterior.classList.remove("jugador");
+                }
+
+                let nuevaCasilla = document.getElementById("casilla-" + nuevaPosicion);
+                if (nuevaCasilla) {
+                    nuevaCasilla.classList.add("jugador");
+                }
+            }
+
+            // --- UTILIDADES ---
+            function getCookie(name) {
+                let matches = document.cookie.match(new RegExp(
+                    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+                ));
+                return matches ? decodeURIComponent(matches[1]) : undefined;
+            }
+        };
+
+
+    </script>
+
+</head>
+
+<body>
+
+    <h1 id="saludo"></h1>
+
+    <label for="dados">Tirar los Dados</label>
+    <p id="dados"></p>
+    <button id="lanzarDados">Lanzar</button>
+    <p>Tu mejor puntuación: <span id="record"></span></p>
+
+    <div class="tablero" id="tablero"></div>
+
+    <!-- Creación de los comodines de Popup 50/50 y ruleta -->
+
+    <div class="comodinBox">
+        <!-- <button id="fifty" class="comodin">50/50</button> -->
+        <button id="ruleta" class="comodin">Ruleta</button>
+    </div>
+
+
+</body>
+
+</html>

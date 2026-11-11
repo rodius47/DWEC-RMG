@@ -115,7 +115,7 @@
             }
 
             // --- 3. MANEJO DEL EVENTO DE VALIDACIÓN ---
-            const validarBtn = document.getElementById('validar');
+            const validarBtn = document.getElementById("validar");
 
             validarBtn.addEventListener("click", function() {
                 const nombre = document.getElementById("nombre").value.trim();
@@ -221,6 +221,27 @@
                 // Redirección
                 window.location.href = "juego_iniciado_RMG.html";
             });
+
+            // --- 5. MANEJO DEL EVENTO DE REINICIO ---
+            const reiniciarBtn = document.getElementById("reiniciar");
+
+            reiniciarBtn.addEventListener("click", function() {
+                // Elimina local y session Storages
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // Eliminación de cookies
+                document.cookie = "user=; max-age=0; path=/";
+                document.cookie = "fechaNacimiento=; max-age=0; path=/";
+                document.cookie = "fondo=; max-age=0; path=/";
+                document.cookie = "puntuacion=; max-age=0; path=/";
+                document.cookie = "partida=; max-age=0; path=/";
+                document.cookie = "historial=; max-age=0; path=/";
+                document.cookie = "ruleta=; max-age=0; path=/";
+
+                // Refresca la página para que la tabla no salga
+                window.location.reload();
+            });
         }
     </script>
 </head>
@@ -237,10 +258,10 @@
         <input type="date" id="fechaNacimiento" name="fechaNacimiento">
     </div>
 
-    <button id="validar">Crear Perfil</button>
+    <button id="validar" style="background-color: coral; font-weight: bold;">Iniciar</button>
+    <button id="reiniciar" style="background-color: crimson; color: white; font-weight: bold;">Eliminar datos</button>
 
     <p id="mensaje" class="mensaje"></p>
     <div id="infoJugador"></div> 
-    <p>Tu mejor puntuación: <span id="record"></span></p>
 </body>
 </html>

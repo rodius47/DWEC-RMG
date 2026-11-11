@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comodín de la ruleta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 18px;
+        }
+        .contenedor-ruleta {
+            position: relative;
+            width: 300px;
+            margin: 15px auto;
+        }
+        #circulo {
+            display: block;
+            transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
+        }
+        .puntero {
+            position: absolute;
+            z-index: 2;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 13px solid transparent;
+            border-right: 13px solid transparent;
+            border-top: 25px solid #222;
+        }
+        button {
+            padding: 9px 20px;
+            cursor: pointer;
+        }
+        #estado { min-height: 24px; }
+    </style>
+</head>
+<body>
+    <h2>Comodín de la ruleta</h2>
+    <p>La ruleta indica cuántas respuestas incorrectas se eliminan.</p>
+
+    <div class="contenedor-ruleta">
+        <div class="puntero"></div>
+        <canvas id="circulo" width="300" height="300"></canvas>
+    </div>
+
+    <button id="botonGirar" disabled>Girar</button>
+    <p id="estado"></p>
+
+    <script>
+        const aceptado = confirm(
+            "Tienes el comodín de la Ruleta.\n¿Quieres utilizarlo?"
+        );
+
+        const canvas = document.getElementById("circulo");
+        const ctx = canvas.getContext("2d");
+        const centro = canvas.width / 2;
+        const radio = 140;
+        const sectores = [
+            0, 0, 0,
+            1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2,
+            3
+        ];
+
+        let rotacionActual = 0;
+        let girando = false;
+
+        function dibujarRuleta() {
+            const angulo = (2 * Math.PI) / sectores.length;
+
+            sectores.forEach((valor, indice) => {
+                const inicio = indice * angulo - Math.PI / 2;
+
+                ctx.beginPath();
+                ctx.moveTo(centro, centro);
+                ctx.arc(centro, centro, radio, inicio, inicio + angulo);
+                ctx.closePath();
+                ctx.fillStyle = indice % 2 === 0 ? "#e74c3c" : "#f1c40f";
+                ctx.fill();
+                ctx.strokeStyle = "#222";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                const medio = inicio + angulo / 2;
+                const x = centro + Math.cos(medio) * 103;
+                const y = centro + Math.sin(medio) * 103;
+
+                ctx.fillStyle = "#222";
+                ctx.font = "bold 16px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(valor === null ? "—" : String(valor), x, y);
+            });
+
+            ctx.beginPath();
+            ctx.arc(centro, centro, 18, 0, 2 * Math.PI);
+            ctx.fillStyle = "#fff";
+            ctx.fill();
+            ctx.strokeStyle = "#222";
+            ctx.stroke();
+        }
+
+        function enviarMensaje(tipo, resultado) {
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({
+                    tipo: tipo,
+                    resultado: resultado
+                }, window.location.origin);
+            }
+        }
+
+        dibujarRuleta();
+
+        if (aceptado) {
+            document.getElementById("botonGirar").disabled = false;
+            document.getElementById("estado").textContent =
+                "Pulsa Girar para obtener el número de opciones que se eliminarán.";
+        } else {
+            enviarMensaje("ruleta-rechazada", null);
+            window.close();
+        }
+
+        document.getElementById("botonGirar").addEventListener("click", function () {
+            if (girando) return;
+            girando = true;
+            this.disabled = true;
+
+            const indice = Math.floor(Math.random() * sectores.length);
+            const resultado = sectores[indice];
+
+            // El giro visual es independiente del resultado elegido al azar.
+            const giroExtra = 1800 + Math.floor(Math.random() * 360);
+            rotacionActual += giroExtra;
+            canvas.style.transform = `rotate(${rotacionActual}deg)`;
+
+            document.getElementById("estado").textContent = "La ruleta está girando...";
+
+            canvas.addEventListener("transitionend", function alTerminar() {
+                document.getElementById("estado").textContent =
+                    resultado === null
+                        ? "Ha salido: sin efecto. No se elimina ninguna opción."
+                        : "Ha salido: " + resultado;
+
+                enviarMensaje("ruleta-resultado", resultado);
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>
